@@ -1,0 +1,180 @@
+# Quant Glossary
+
+A growing list of essential terms in fixed income, derivatives, and quantitative finance.  
+All definitions are simplified but precise, meant for fast recall and interview use.
+
+---
+
+## 1. Discount Factor (DF)
+
+Present value of receiving 1 unit of currency at time \(T\).
+
+$$
+DF(0,T) = e^{-R(0,T)T}
+$$
+
+DF is the foundational object for all pricing.
+
+---
+
+## 2. Zero Rate
+
+The continuously compounded rate that corresponds to a discount factor:
+
+$$
+R(0,T) = -\frac{1}{T} \ln(DF(0,T))
+$$
+
+Represents an *average* rate from now to maturity.
+
+---
+
+## 3. Forward Rate
+
+The implied rate between two future times:
+
+$$
+f(T_1,T_2) = -\frac{1}{T_2-T_1} 
+\ln\!\left(\frac{DF(0,T_2)}{DF(0,T_1)}\right)
+$$
+
+Represents a *future instantaneous rate* implied by today’s curve.
+
+---
+
+## 4. Par
+
+“Equal to face value”; no premium, no discount.
+
+- Bond par = price = 100  
+- Swap par rate = fixed leg PV = floating leg PV  
+- FRN resets to par each period  
+
+Par instruments are used for bootstrapping.
+
+---
+
+## 5. Bootstrapping
+
+The method of constructing discount factors from market par instruments:
+
+1. Deposits → short-end DF  
+2. Futures/FRAs → mid-end DF  
+3. Swaps → long-end DF  
+
+Builds the curve point-by-point without arbitrage.
+
+---
+
+## 6. Quote vs Price
+
+**Quote:** Market’s communication format（yield, swap rate, CDS spread…）  
+**Price:** Actual monetary value（PV or dirty price）
+
+Quotes are often *not* prices.
+
+---
+
+## 7. Simple Interest
+
+Market convention for deposits and floating rates:
+
+$$
+DF=\frac{1}{1+r\Delta}
+$$
+
+No compounding.
+
+---
+
+## 8. Continuous Compounding
+
+Quant model convention for zero/forward rates:
+
+$$
+DF=e^{-RT}
+$$
+
+Used because it supports smooth derivatives and modeling.
+
+---
+
+## 9. Yield to Maturity (YTM)
+
+Single discount rate that sets bond PV equal to price.
+
+Not used for pricing in quant.  
+Used only to quote bond value.
+
+---
+
+## 10. Accrual (Daycount Fraction)
+
+The fraction of a year that determines coupon size:
+
+$$
+\text{Coupon} = r \cdot \Delta \cdot \text{Notional}
+$$
+
+Typical daycounts: ACT/360、ACT/365、30/360.
+
+---
+
+## 11. Clean Price vs Dirty Price
+
+- **Clean price**: quoted price（不含应计利息）  
+- **Dirty price**: true cash paid = clean price + accrued interest  
+
+Bond settlement uses dirty price.
+
+---
+
+## 12. Forward Premium / Discount
+
+In FX:  
+- Forward > spot → premium  
+- Forward < spot → discount  
+
+Driven by interest rate differentials.
+
+---
+
+## 13. Fair Value (PV=0)
+
+A derivative’s fair price is the value that makes its PV = 0 at inception.  
+Examples：par swap、par CDS、par FRA。
+
+---
+
+## 14. Floating Leg (Swap)
+
+Always priced at par right after reset:
+
+$$
+PV_{\text{float}} = 1
+$$
+
+This makes swap bootstrapping possible.
+
+---
+
+## 15. Duration / DV01 (to be expanded)
+
+- Duration: sensitivity to parallel rate shift  
+- DV01: price change from a 1 bp change in rates  
+
+(You can fill in more later)
+
+---
+
+# To Be Added
+
+As you learn more:
+- OIS discounting  
+- Convexity adjustment  
+- FRA vs Futures difference  
+- Z-spread / OAS  
+- Collateral curve  
+- Multi-curve framework  
+- Credit curve bootstrapping  
+- XVA terms（CVA, DVA, FVA, KVA...）
