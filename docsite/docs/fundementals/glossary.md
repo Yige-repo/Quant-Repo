@@ -1,3 +1,8 @@
+---
+title: Glossary
+sidebar_label: Glossary
+---
+
 # Quant Glossary
 
 A growing list of essential terms in fixed income, derivatives, and quantitative finance.  
