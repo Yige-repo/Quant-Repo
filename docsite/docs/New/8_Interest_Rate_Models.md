@@ -23,7 +23,120 @@ Two components:
 
 ---
 
-## 2. Short-Rate Models (Overview)
+## 2. Brownian Motion & Distribution Assumptions
+
+Short-rate models use Brownian motion to introduce randomness into rate evolution.
+
+### 2.1 Brownian Motion Basics
+
+Brownian motion $W_t$ is defined by:
+
+- $W_0 = 0$  
+- $W_{t+\Delta t} - W_t \sim N(0, \Delta t)$  
+- Independent increments  
+
+Continuous-time notation:
+
+$$
+dW_t \sim N(0, dt)
+$$
+
+Simulation form:
+
+$$
+dW_t \approx \sqrt{\Delta t}\, Z,\quad Z \sim N(0,1)
+$$
+
+Meaning:
+
+- Randomness grows with **$\sqrt{\Delta t}$**, not $\Delta t$.  
+- Over a horizon $T$,
+
+  $$
+  W_T \sim N(0, T) = \sqrt{T} Z
+  $$
+
+This explains why many formulas contain $\sqrt{T}$ terms.
+
+---
+
+### 2.2 Normal vs. Lognormal Models
+
+“Normal vs. lognormal” refers to the **distribution of the model variable**, *not* $dW_t$.
+
+#### Normal-Type Model  
+Example: Hull–White / Vasicek
+
+$$
+dr_t = a(\theta(t) - r_t)\,dt + \sigma\,dW_t
+$$
+
+Characteristics:
+
+- Additive noise → $r_t$ is Gaussian.  
+- Rates can be negative.  
+- Good for curve calibration, XVA, risk.
+
+#### Lognormal-Type Model  
+Example: Black / Black–Scholes
+
+$$
+dS_t = \mu S_t dt + \sigma S_t dW_t
+$$
+
+- Multiplicative noise → $\ln S_T$ normal → $S_T$ lognormal.  
+- Ensures positivity.  
+- Used when the underlying is a tradable price.
+
+---
+
+### 2.3 What Is the Distribution of $dS_t$?
+
+$dS_t$ itself is not assigned a “distribution name.”  
+In discrete form:
+
+$$
+\Delta S \approx \mu S_t \Delta t + \sigma S_t \sqrt{\Delta t} Z
+$$
+
+The randomness is local; what matters is:
+
+- $S_T$ distribution (lognormal)  
+- integrals of $r_t$ (Gaussian)
+
+Models are classified by **terminal distribution**, not by $dW_t$ or $dS_t$.
+
+---
+
+## 3. Itô Formula (Quick Reference)
+
+If
+
+$$
+dX_t = \mu(X_t,t)\,dt + \sigma(X_t,t)\,dW_t,
+$$
+
+then for a twice-differentiable function $f(x,t)$:
+
+$$
+df(X_t,t)
+=
+f_x\, dX_t
++ f_t\, dt
++ \tfrac12 f_{xx}\, \sigma^2(X_t,t)\, dt.
+$$
+
+Example (GBM-type):
+
+$$
+dF_t = \sigma F_t dW_t
+\;\Rightarrow\;
+d(\ln F_t) = \sigma dW_t - \tfrac12 \sigma^2 dt.
+$$
+
+---
+
+## 4. Short-Rate Models (Overview)
 
 Short-rate models specify the evolution of $ r_t $.  
 Common models:
@@ -36,7 +149,7 @@ Common models:
 
 ---
 
-## 3. Vasicek Model (Comparison Baseline)
+## 5. Vasicek Model (Comparison Baseline)
 
 The Vasicek model is the simplest mean-reverting short-rate model:
 
@@ -59,7 +172,7 @@ Key properties:
 
 Why Vasicek matters:
 
-- It is the ancestor of Hull–White: HW simply replaces constant $b$ with a time-dependent $\theta(t)$ to fit today’s curve.
+- It is the ancestor of Hull–White: HW simply replaces constant $b$ with a time-dependent $\theta(t)$ to fit today’s curve.  
 - Provides intuition for Gaussian affine term-structure models.
 
 Vasicek structure:
@@ -77,9 +190,9 @@ Interpretation:
 
 ---
 
-## 4. Hull–White One-Factor Model (HW1F)
+## 6. Hull–White One-Factor Model (HW1F)
 
-### 4.1 Model Definition
+### 6.1 Model Definition
 
 $$
 dr_t = a(\theta(t) - r_t)\,dt + \sigma\,dW_t
@@ -100,7 +213,7 @@ Properties:
 
 ---
 
-### 4.2 Why Hull–White?
+### 6.2 Why Hull–White?
 
 Limitations of Vasicek:
 
@@ -122,7 +235,7 @@ Replace constant $b$ with time-dependent $\theta(t)$:
 
 ---
 
-### 4.3 Calibration: Determining $\theta(t)$
+### 6.3 Calibration: Determining $\theta(t)$
 
 Calibration condition:
 
@@ -167,7 +280,7 @@ Interpretation:
 
 ---
 
-### 4.4 Closed-Form Bond Price
+### 6.4 Closed-Form Bond Price
 
 Under HW1F:
 
@@ -192,7 +305,7 @@ Reason bond price is exponential-affine:
 
 ---
 
-### 4.5 Monte Carlo Simulation
+### 6.5 Monte Carlo Simulation
 
 Euler discretization:
 
@@ -214,7 +327,7 @@ Interpretation:
 
 ---
 
-### 4.6 Economic Interpretation
+### 6.6 Economic Interpretation
 
 - **a** → Speed of mean reversion  
 - **σ** → Strength of future uncertainty  
@@ -227,7 +340,7 @@ Meaning:
 
 ---
 
-### 4.7 Why Hull–White is Important
+### 6.7 Why Hull–White is Important
 
 Advantages:
 
@@ -243,7 +356,243 @@ Advantages:
 
 ---
 
-## 5. Hull–White Two-Factor (HW2F)
+### 6.8 Zero-Coupon Bond Options in HW1F
+
+Under HW1F, the zero-coupon bond price has an exponential-affine form:
+
+$$
+P(t,T) = A(t,T)\exp\big(-B(t,T) r_t\big),
+$$
+
+where:
+
+$$
+B(t,T) = \frac{1 - e^{-a(T-t)}}{a}.
+$$
+
+Because:
+
+- $r_t$ is Gaussian, and  
+- $\ln P(t,T)$ is affine in $r_t$,
+
+it follows that **$\ln P(t,T)$ is Gaussian** and $P(t,T)$ is lognormal (under an appropriate forward measure).
+
+---
+
+#### 6.8.1 Bond Call Option
+
+Consider a European call on a zero-coupon bond:
+
+- Option expiry: $U$  
+- Bond maturity: $T > U$  
+- Strike: $K$
+
+Payoff at $U$:
+
+$$
+\max(P(U,T) - K, 0).
+$$
+
+Using **change of numeraire** to the $U$-forward measure $\mathbb{Q}^U$:
+
+$$
+C = P(0,U)\;
+\mathbb{E}^{\mathbb{Q}^U}\!\left[\max(P(U,T) - K, 0)\right].
+$$
+
+Under $\mathbb{Q}^U$, $P(U,T)$ is lognormal with volatility $\sigma_B$.  
+Therefore the call price takes a **Black-like closed form**:
+
+$$
+C
+=
+P(0,U) N(d_1)
+-
+K\, P(0,T)\, N(d_2),
+$$
+
+where
+
+$$
+d_{1,2}
+=
+\frac{
+\ln\!\left(\dfrac{P(0,T)}{K}\right)
+\pm \tfrac12 \sigma_B^2
+}{
+\sigma_B
+},
+$$
+
+and the HW1F bond volatility is:
+
+$$
+\sigma_B^2
+=
+\frac{\sigma^2}{2a^3}
+\Big(1 - e^{-a(T-U)}\Big)^2
+\Big(1 - e^{-2aU}\Big).
+$$
+
+Interpretation:
+
+- $P(0,U)$ = discount factor (numeraire)  
+- $P(0,T)$ = forward bond price  
+- $\sigma_B$ = effective volatility implied by HW1F  
+- Formula identical in structure to Black’s forward-call formula
+
+This closed-form bond option is the building block for **swaption pricing via Jamshidian decomposition**.
+
+---
+
+### 6.9 Swaption Pricing via Jamshidian Decomposition (HW1F)
+
+A payer swaption gives the right (at $T_0$) to enter a swap:
+
+- Pay fixed $K$  
+- Receive floating  
+- Swap payment dates $T_1,\dots,T_n > T_0$
+
+At $T_0$, the swap value is:
+
+$$
+V_{\text{swap}}(T_0)
+=
+1 - P(T_0,T_n)
+-
+K \sum_{i=1}^n \Delta_i\, P(T_0,T_i).
+$$
+
+This is a **linear combination of zero-coupon bond prices**:
+
+$$
+V_{\text{swap}}(T_0)
+=
+1 - \sum_{i=1}^n w_i\, P(T_0,T_i),
+$$
+
+with:
+
+$$
+w_i =
+\begin{cases}
+K\Delta_i, & i = 1,\dots,n-1, \\
+K\Delta_n + 1, & i = n.
+\end{cases}
+$$
+
+Thus the payer swaption payoff at $T_0$ is:
+
+$$
+\max\Big(1 - \sum_{i=1}^n w_i P(T_0,T_i),\; 0\Big).
+$$
+
+This is a **basket option**, normally hard to price analytically.
+
+---
+
+#### 6.9.1 Existence of a Unique $r^*$
+
+Under HW1F:
+
+$$
+P(T_0,T_i; r) = A_i \exp(-B_i r),
+$$
+
+so each bond price is strictly decreasing in the short rate $r$.  
+Therefore:
+
+$$
+V_{\text{swap}}(T_0; r)
+= 
+1 - \sum_{i=1}^n w_i P(T_0,T_i; r)
+$$
+
+is a strictly monotone function of $r$.
+
+Hence there exists a **unique** $r^*$ such that:
+
+$$
+V_{\text{swap}}(T_0; r^*) = 0,
+$$
+
+i.e.,
+
+$$
+1 = \sum_{i=1}^n w_i P(T_0,T_i; r^*).
+$$
+
+$r^*$ = the **critical short rate** at which the swap is exactly at-the-money at $T_0$.
+
+---
+
+#### 6.9.2 Jamshidian Decomposition
+
+Define:
+
+$$
+K_i = P(T_0,T_i;\, r^*).
+$$
+
+Jamshidian’s theorem:
+
+> Under any one-factor affine short-rate model (such as HW1F),  
+> the payer swaption equals a weighted sum of **bond call options**:
+
+$$
+\text{Payer Swaption}
+=
+\sum_{i=1}^n
+w_i\;
+C^{\text{bond}}(0;\, U=T_0,\, T_i,\, K_i),
+$$
+
+where each term is the closed-form bond call from Section **6.8**.
+
+Thus:
+
+- No Monte Carlo  
+- No PDE  
+- Swaption is **fully analytic** in HW1F
+
+---
+
+#### 6.9.3 Receiver Swaption
+
+Use swaption put–call parity:
+
+$$
+\text{Receiver Swaption}
+=
+\text{Payer Swaption}
++
+\text{PV of fixed leg at strike } K
+-
+\text{PV of floating leg}.
+$$
+
+Or equivalently apply Jamshidian with the opposite swap direction.
+
+---
+
+#### 6.9.4 Intuition & Limitations
+
+- Swap = linear combination of bonds  
+- In a **one-factor** affine model, all bonds depend on **one** random variable $r_{T_0}$  
+- Swap value becomes **1-D**, strictly monotone → unique $r^*$  
+- Basket payoff collapses into sum of single-asset payoffs  
+
+Limitations:
+
+- Works **only** for 1-factor affine models (HW1F, G1++)  
+- Fails for multi-factor models (HW2F / G2++), where no unique $r^*$ exists  
+- Multi-factor swaption pricing requires PDE / Monte Carlo / approximations  
+
+Jamshidian decomposition is the key reason HW1F provides fast, closed-form swaption pricing.
+
+---
+
+## 7. Hull–White Two-Factor (HW2F)
 
 The one-factor Hull–White model can fit the initial curve but cannot generate realistic yield-curve dynamics.  
 Historical yield curves move primarily via:
@@ -257,7 +606,7 @@ HW2F adds a second Gaussian factor to model richer curve motions.
 
 ---
 
-### 5.1 Model Definition
+### 7.1 Model Definition
 
 Short rate:
 
@@ -290,7 +639,7 @@ Interpretation:
 
 ---
 
-### 5.2 Why HW2F?
+### 7.2 Why HW2F?
 
 Limit of HW1F:
 
@@ -310,7 +659,7 @@ Thus:
 
 ---
 
-### 5.3 Bond Price Closed Form
+### 7.3 Bond Price Closed Form
 
 Affine structure is preserved:
 
@@ -329,7 +678,7 @@ $A(t,T)$ includes convexity corrections and $\phi(t)$.
 
 ---
 
-### 5.4 Forward Rate Volatility
+### 7.4 Forward Rate Volatility
 
 Instantaneous forward volatility:
 
@@ -349,7 +698,7 @@ Meaning:
 
 ---
 
-### 5.5 Swaption Pricing
+### 7.5 Swaption Pricing
 
 Unlike HW1F, there is **no Jamshidian decomposition**.
 
@@ -365,7 +714,7 @@ Calibration quality >> HW1F, especially for long expiry/long tenor swaptions.
 
 ---
 
-### 5.6 Calibration Strategy
+### 7.6 Calibration Strategy
 
 Typical steps:
 
@@ -380,7 +729,7 @@ Rules of thumb:
 
 ---
 
-### 5.7 HW1F vs HW2F Summary
+### 7.7 HW1F vs HW2F Summary
 
 | Feature | HW1F | HW2F |
 |--------|------|------|
@@ -396,7 +745,7 @@ HW2F is widely considered the minimal realistic Gaussian short-rate model.
 
 ---
 
-## 6. CIR Model (Non-Negative Short Rate)
+## 8. CIR Model (Non-Negative Short Rate)
 
 The CIR model modifies the diffusion term to prevent negative rates:
 
@@ -434,7 +783,7 @@ Modern usage:
 
 ---
 
-## 7. HJM Framework (General No-Arbitrage Forward-Curve Dynamics)
+## 9. HJM Framework (General No-Arbitrage Forward-Curve Dynamics)
 
 HJM models the entire instantaneous forward curve $f(t,T)$:
 
@@ -447,18 +796,20 @@ Where:
 - $t$ = current time  
 - $T$ = maturity  
 - $f(t,T)$ = instantaneous forward rate  
-- $\sigma(t,T)$ = forward-rate volatility term structure
+- $\sigma(t,T)$ = forward-rate volatility term structure  
 
-### 7.1 Infinite-dimensional nature
+### 9.1 Infinite-Dimensional Nature
 
 For each maturity $T$, forward rate has its own SDE.  
 Since maturities are continuous, forward curve is **infinite-dimensional**.
 
 A model for $f(t, T_1)$ tells you nothing about $f(t,T_2)$ unless you specify the whole surface.
 
-### 7.2 No-arbitrage drift condition (HJM core result)
+---
 
-In the risk-neutral measure:
+### 9.2 No-Arbitrage Drift Condition (HJM Core Result)
+
+In the risk-neutral measure (one-factor case):
 
 $$
 \alpha(t,T)
@@ -470,11 +821,13 @@ Meaning:
 
 - **Volatility fully determines drift**  
 - Drift is *not* a free parameter  
-- Arbitrage is avoided only if forward curve drift satisfies this condition
+- Arbitrage is avoided only if forward curve drift satisfies this condition  
 
 This is the opposite of short-rate models, where we freely choose drift ($\theta(t)$) and discounting ensures no-arbitrage.
 
-### 7.3 Why HJM matters
+---
+
+### 9.3 Why HJM Matters
 
 - Most general arbitrage-free curve model  
 - Everything else (HW, G2++, LMM) is essentially **finite-factor or discrete versions of HJM**  
@@ -482,7 +835,7 @@ This is the opposite of short-rate models, where we freely choose drift ($\theta
 
 ---
 
-## 8. Libor Market Model (LMM / BGM)
+## 10. Libor Market Model (LMM / BGM)
 
 LMM models **market-observable forward LIBOR rates**:
 
@@ -492,7 +845,7 @@ $$
 L_i(t) = L(t, T_i, T_{i+1})
 $$
 
-### 8.1 Key assumption
+### 10.1 Key Assumption
 
 Under the $T_{i+1}$-forward measure:
 
@@ -504,34 +857,38 @@ $$
 
 - **drift = 0** in its own forward measure → lognormal  
 - Perfectly consistent with Black’s formula for caplets  
-- Easy calibration to swaption vol surfaces
+- Easy calibration to swaption vol surfaces  
 
 This is HJM with:
 
 - discrete maturities  
 - lognormal dynamics  
-- one measure per forward
+- one measure per forward  
 
-### 8.2 Why drift “disappears”
+---
+
+### 10.2 Why Drift “Disappears”
 
 Because measure-change absorbs the drift:
 
 - In risk-neutral measure: drift contains HJM-style $\sigma^2$ integrals  
 - In forward measure: $L_i(t)$ becomes a martingale → drift = 0  
-- The complicated HJM no-arbitrage drift hides inside the Radon–Nikodym derivative
+- The complicated HJM no-arbitrage drift hides inside the Radon–Nikodym derivative  
 
-### 8.3 Practical implications
+---
+
+### 10.3 Practical Implications
 
 - **Pricing:** very convenient (caplets, swaptions)  
 - **Simulation:** expensive  
   - Must simulate all forwards under a *single* measure  
   - Only one forward has zero drift  
   - Others regain complex drift structures  
-- Typically used for derivative pricing, not exposure/XVA simulations
+- Typically used for derivative pricing, not exposure/XVA simulations  
 
 ---
 
-## 9. Multi-Curve Models (OIS Discounting vs LIBOR Forwarding)
+## 11. Multi-Curve Models (OIS Discounting vs LIBOR Forwarding)
 
 Post-2008, the market moved from a **single-curve** world to a **multi-curve** world.
 
@@ -543,9 +900,9 @@ After 2008:
 
 - Discounting must use **OIS curve** (close to risk-free collateral rate)  
 - Forward rates use **tenor-specific curves** (1M, 3M, 6M, etc.)  
-- Basis spreads between tenors must be modeled explicitly
+- Basis spreads between tenors must be modeled explicitly  
 
-### 9.1 Core structure
+### 11.1 Core Structure
 
 - **Discount curve:** OIS  
 - **Forward curves:** one per tenor  
@@ -568,150 +925,31 @@ $$
 PV = \sum_i \text{Cashflow}_i \cdot DF_{\text{OIS}}(t_i)
 $$
 
-### 9.2 Relationship with models
+---
+
+### 11.2 Relationship with Models
 
 - **HW**: typically models OIS curve dynamics only  
 - **LMM**: models forward LIBOR dynamics; discounting still uses OIS  
-- Multi-curve bootstrapping provides deterministic initial curves
+- Multi-curve bootstrapping provides deterministic initial curves  
 
-### 9.3 Why multi-curve is essential
+---
+
+### 11.3 Why Multi-Curve Is Essential
 
 - LIBOR ≠ risk-free  
 - Collateralized swaps must be discounted at OIS  
 - Single-curve pricing yields incorrect swap and swaption values  
-- Required for accurate risk (DV01 decomposition, XVA)
+- Required for accurate risk (DV01 decomposition, XVA)  
 
 ---
 
-## 10. Pricing Applications
-
-### 10.1 Bonds  
-- Short-rate affine models (Vasicek, HW, CIR) give closed-form bond prices  
-- Multi-curve environment: discount using OIS DF
-
-### 10.2 Swaps  
-- Floating leg forwards from tenor-specific curve  
-- Discount with OIS curve  
-- In HW: swap price obtained via closed-form expectation against short-rate distribution
-
-### 10.3 Swaptions  
-- HW: closed form via Jamshidian (for payer/receiver)  
-- LMM: natural lognormal structure, matches swaption vol surface  
-- SABR/local-vol added when smile calibration is required
-
----
-
-## 11. Risk Applications
-
-### 11.1 DV01 / PV01 / IR01  
-- Sensitivity to specific curve bumps (OIS / 3M / 6M / basis)
-
-### 11.2 Scenario risk  
-- Shifts to forward curves and discount curves separately  
-- Multi-curve structure separates discount risk from tenor risk
-
-### 11.3 Exposure (EE / EPE / PFE)  
-- HW widely used (fast simulation, Gaussian)  
-- LMM possible but costly (complex drift under single measure)
-
-### 11.4 XVA  
-- Discounting uses OIS  
-- Forward exposure depends on forward-tenor curves  
-- Short-rate models often preferred for computational efficiency
-
----
-
-## 12. Brownian Motion & Distribution Assumptions
-
-Short-rate models use Brownian motion to introduce randomness into rate evolution.
-
-### 12.1 Brownian Motion Basics
-
-Brownian motion $W_t$ is defined by:
-
-- $W_0 = 0$
-- $W_{t+\Delta t} - W_t \sim N(0, \Delta t)$
-- Independent increments
-
-Continuous-time notation:
-
-$$
-dW_t \sim N(0, dt)
-$$
-
-Simulation form:
-
-$$
-dW_t \approx \sqrt{\Delta t}\, Z,\quad Z \sim N(0,1)
-$$
-
-Meaning:
-
-- Randomness grows with **$\sqrt{\Delta t}$**, not $\Delta t$.  
-- Over a horizon $T$,
-
-  $$
-  W_T \sim N(0, T) = \sqrt{T} Z
-  $$
-
-This explains why many formulas contain $\sqrt{T}$ terms.
-
----
-
-### 12.2 Normal vs. Lognormal Models
-
-“Normal vs. lognormal” refers to the **distribution of the model variable**, *not* $dW_t$.
-
-#### Normal-Type Model  
-Example: Hull–White / Vasicek
-
-$$
-dr_t = a(\theta(t) - r_t)\,dt + \sigma\,dW_t
-$$
-
-Characteristics:
-
-- Additive noise → $r_t$ is Gaussian.  
-- Rates can be negative.  
-- Good for curve calibration, XVA, risk.
-
-#### Lognormal-Type Model  
-Example: Black / Black–Scholes
-
-$$
-dS_t = \mu S_t dt + \sigma S_t dW_t
-$$
-
-- Multiplicative noise → $\ln S_T$ normal → $S_T$ lognormal.  
-- Ensures positivity.  
-- Used when the underlying is a tradable price.
-
----
-
-### 12.3 What Is the Distribution of $dS_t$?
-
-$dS_t$ itself is not assigned a “distribution name.”  
-In discrete form:
-
-$$
-\Delta S \approx \mu S_t \Delta t + \sigma S_t \sqrt{\Delta t} Z
-$$
-
-The randomness is local; what matters is:
-
-- $S_T$ distribution (lognormal)  
-- integrals of $r_t$ (Gaussian)
-
-Models are classified by **terminal distribution**, not by $dW_t$ or $dS_t$.
-
----
-
-## 13. Market Data & Daily Calibration
+## 12. Market Data & Daily Calibration
 
 Interest rate models must align with **today’s market curve**.  
 This requires *daily calibration*.
 
-### 13.1 What Counts as Market Data?
+### 12.1 What Counts as Market Data?
 
 Typical market inputs:
 
@@ -734,7 +972,7 @@ These are updated daily (or intraday) and form the basis of calibration.
 
 ---
 
-### 13.2 Why Daily Calibration?
+### 12.2 Why Daily Calibration?
 
 Short-rate models must satisfy:
 
@@ -762,7 +1000,7 @@ Meaning:
 
 ---
 
-### 13.3 OIS vs Term Rates (Quick Clarification)
+### 12.3 OIS vs Term Rates (Quick Clarification)
 
 Even though OIS is based on overnight rates:
 
@@ -773,7 +1011,7 @@ Thus, OIS curve is fully suitable for forward rate computation.
 
 ---
 
-## 14. Volatility Smile (High-Level)
+## 13. Volatility Smile (High-Level)
 
 In simple Black models, volatility is constant.  
 In real markets, implied volatility varies with:
@@ -783,7 +1021,7 @@ In real markets, implied volatility varies with:
 
 Plotting implied vol vs. strike yields a **smile/skew**.
 
-### 14.1 Smile in Interest Rate Markets
+### 13.1 Smile in Interest Rate Markets
 
 Swaption markets provide a full volatility surface:
 
@@ -805,6 +1043,224 @@ Smile matters because:
 
 ---
 
+## 14. SABR Volatility Model (Swaption Smile)
+
+The Hull–White model provides closed-form ATM swaption pricing,  
+but it cannot fit the **volatility smile** observed in real markets.  
+SABR (Stochastic Alpha–Beta–Rho) is the market standard for modeling  
+**strike-dependent implied volatility** for swaptions.
+
+SABR is not a short-rate model and does **not** describe interest-rate
+evolution. Its purpose is simpler:
+
+> Produce implied volatilities σ(K) across strikes K,  
+> matching the swaption smile observed in the market.
+
+---
+
+### 14.1 Model Definition
+
+SABR models the **forward swap rate** $F_t$ under its natural forward measure:
+
+$$
+\begin{aligned}
+dF_t &= \alpha_t\, F_t^{\,\beta}\, dW_t^{(1)}, \\
+d\alpha_t &= \nu\, \alpha_t\, dW_t^{(2)}, \\
+\mathrm{corr}(W^{(1)}, W^{(2)}) &= \rho, 
+\end{aligned}
+$$
+
+where:
+
+- $F_t$ = forward swap rate (or forward rate for caplets)  
+- $\alpha_t$ = instantaneous volatility (stochastic)  
+- $\alpha_0 = \alpha$ is the calibrated “alpha parameter”  
+- $\beta$ = elasticity parameter (controls shape: normal vs lognormal)  
+- $\rho$ = correlation between rate & volatility  
+- $\nu$ = vol-of-vol (controls smile curvature)  
+
+SABR is a **local-stochastic volatility** model:  
+volatility depends simultaneously on the level of the underlying (via $F^\beta$)  
+and on a stochastic volatility process ($\alpha_t$).
+
+---
+
+### 14.2 Parameter Interpretation
+
+| Parameter | Meaning | Effect on Smile |
+|----------|---------|-----------------|
+| **α (alpha)** | Initial vol level | Controls ATM implied vol |
+| **β (beta)** | Elasticity exponent | 1 → lognormal shape; 0 → normal shape; intermediate → hybrid |
+| **ρ (rho)** | Correlation between F and vol | Controls skew direction and steepness |
+| **ν (nu)** | Vol-of-vol | Controls smile curvature / tails (how “fat” ITM/OTM vols become) |
+
+Intuition:
+
+- **β** determines whether volatility grows with the rate level.  
+  - β=1 → multiplicative noise → lognormal-type distribution  
+  - β=0 → additive noise → normal distribution  
+  - 0 < β < 1 → CEV-type dynamics (intermediate behavior)
+
+- **ρ** determines skew.  
+  Market swaptions typically have **ρ < 0**, producing the usual downward sloping skew.
+
+- **ν** determines how far ITM/OTM vol deviates from ATM vol.  
+  Larger ν → wider smile.
+
+---
+
+### 14.3 Local Volatility Under SABR
+
+The instantaneous variance of $F_t$ is:
+
+$$
+\mathrm{Var}(dF_t) = \alpha_t^2 F_t^{2\beta} \, dt.
+$$
+
+This “elasticity” $F^{2\beta}$ is the key driver of smile shape:
+
+- If β=1 → high rates produce larger volatility (lognormal behavior)  
+- If β=0 → volatility independent of level (normal behavior)  
+- Intermediate β → partial level-dependence  
+
+This local-volatility structure explains why Black or Bachelier alone  
+cannot fit smile: SABR dynamically adjusts vol according to rate level.
+
+---
+
+### 14.4 Hagan’s Implied Volatility Approximation
+
+SABR itself does **not** provide a closed-form swaption price.  
+Instead, Hagan et al. derived an approximation for **Black implied volatility**:
+
+Let:
+
+- $F$ = forward swap rate at pricing time  
+- $K$ = strike  
+- $T$ = option expiry  
+- $\alpha, \beta, \rho, \nu$ = SABR parameters  
+
+Define the logarithmic moneyness:
+
+$$
+z = \frac{\nu}{\alpha} (F K)^{\frac{1-\beta}{2}} \ln\left(\frac{F}{K}\right),
+$$
+
+and the correction term:
+
+$$
+\chi(z)
+=
+\ln\left(
+\frac{
+\sqrt{1 - 2\rho z + z^2} + z - \rho
+}{
+1 - \rho
+}
+\right).
+$$
+
+Then the SABR implied vol under Black’s model is approximately:
+
+$$
+\sigma_{\text{SABR}}(K)
+\approx
+\frac{\alpha}{
+(FK)^{\frac{1-\beta}{2}}
+}
+\left[
+1 +
+\frac{(1-\beta)^2}{24} \ln^2\!\left(\frac{F}{K}\right)
++
+\frac{(1-\beta)^4}{1920} \ln^4\!\left(\frac{F}{K}\right)
+\right]
+\cdot
+\frac{z}{\chi(z)}.
+$$
+
+This expression produces a full strike-dependent volatility curve  
+that matches market swaption smiles remarkably well.
+
+---
+
+### 14.5 ATM Implied Volatility
+
+At ATM ( $K = F$ ), the formula simplifies significantly:
+
+$$
+\sigma_{\text{ATM}}
+\approx
+\alpha
+\left[
+1 +
+\frac{(1-\beta)^2}{24} \alpha^2 T F^{2\beta-2}
++
+\frac{\rho \beta \nu \alpha T}{4}
++
+\frac{\nu^2 T}{24}
+\right].
+$$
+
+Interpretation:
+
+- $\alpha$ is the **dominant** term (ATM determines α)  
+- β adjusts how ATM vol changes with rate level  
+- ρ introduces skew effects even at ATM  
+- ν adjusts curvature  
+
+---
+
+### 14.6 Calibration Workflow
+
+Market calibration typically proceeds as:
+
+1. **Fix β**  
+   - Often 0.5, 0.7, or 1.0  
+   - Chosen to give stable parameter behavior  
+
+2. **Fit α (ATM vol)**  
+   - Match SABR ATM formula to market ATM vol  
+
+3. **Fit ρ and ν**  
+   - Match slope and curvature of the market smile  
+   - ρ controls skew  
+   - ν controls fat tails / wings  
+
+This yields a set of SABR parameters for each expiry–tenor pair of the swaption surface  
+(e.g., 1Y×10Y, 2Y×5Y, 5Y×30Y).
+
+---
+
+### 14.7 SABR vs. Short-Rate Models
+
+| Feature | Hull–White (HW1F) | SABR |
+|---------|--------------------|------|
+| Purpose | Rate evolution, curve dynamics | Smile fitting, option vols |
+| Distribution | Normal-type | CEV + stochastic vol |
+| ATM swaptions | Closed-form (Jamshidian) | Fits ATM via α |
+| Smile | Poor | Excellent |
+| Full surface | Weak | Strong (market standard) |
+| Used for | Risk, exposure, curve models | Pricing, calibration |
+
+SABR complements models like HW1F or HW2F:
+
+- Use HW for curve evolution / scenario generation  
+- Use SABR for market-consistent smile calibration  
+
+---
+
+### 14.8 Practical Notes
+
+- SABR is **parametric**, not a term-structure model.  
+- Parameters vary by expiry and tenor.  
+- β is typically fixed to reduce instability.  
+- Real desks use **SABR → implied vol → Black/Bachelier price**.  
+- Hagan approximation is extremely accurate except for extreme wings and very low rates.  
+
+SABR remains the dominant market standard for swaption smile calibration.
+
+---
+
 ## 15. Summary
 
 Key intuitions:
@@ -816,4 +1272,3 @@ Key intuitions:
 - HJM provides a general no-arbitrage framework; LMM is its tradable, discrete version.  
 - Multi-curve is mandatory post-2008 (OIS discounting vs tenor forwarding).  
 - Smile/surface is the “fingerprint” of market option prices; models must map to it.
-
